@@ -10,7 +10,9 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "postinstall": "preconstruct dev",
+    "fix": "preconstruct fix"
   },
   "devDependencies": {
     "eslint-config-custom": "workspace:*",
@@ -21,6 +23,13 @@
     "npm": ">=7.0.0",
     "node": ">=14.0.0"
   },
-  "dependencies": {},
-  "packageManager": "pnpm@7.6.0"
+  "dependencies": {
+    "@preconstruct/cli": "^2.2.1"
+  },
+  "packageManager": "pnpm@7.6.0",
+  "preconstruct": {
+    "packages": [
+      "packages/ui"
+    ]
+  }
 }
