@@ -52,7 +52,7 @@ describe("order model", () => {
 
     orderModel.addOrderLine(lineTemplate);
 
-    let lines = orderModel.getOrderLines().unwrap();
+    let lines = orderModel.getOrderLines();
 
     expect(lines[0].quantity).toBe(20);
 
@@ -64,13 +64,13 @@ describe("order model", () => {
   it("delete complete a product in order", () => {
     orderModel.addOrderLine(lineTemplate);
 
-    let lines = orderModel.getOrderLines().unwrap();
+    let lines = orderModel.getOrderLines();
 
     expect(lines.length).toBe(1);
 
     orderModel.deleteOrderLine(lineTemplate.product.id);
 
-    lines = orderModel.getOrderLines().unwrap();
+    lines = orderModel.getOrderLines();
 
     expect(lines.length).toBe(0);
   });
@@ -85,7 +85,7 @@ describe("order model", () => {
 
     orderModel.deleteOrderLine(lineTemplate.product.id, 4);
 
-    const lines = orderModel.getOrderLines().unwrap();
+    const lines = orderModel.getOrderLines();
 
     expect(lines[0].quantity).toBe(6);
 
@@ -99,8 +99,38 @@ describe("order model", () => {
 
     orderModel.deleteOrderLine(lineTemplate.product.id, 15);
 
-    const lines = orderModel.getOrderLines().unwrap();
+    const lines = orderModel.getOrderLines();
 
     expect(lines[0].quantity).toBe(-5);
+  });
+
+  it("check if total is price * quantity", () => {
+    orderModel.addOrderLine(lineTemplate);
+
+    let order = orderModel.getOrder();
+
+    expect(order.total).toBe(100);
+
+    orderModel.addOrderLine(lineTemplate);
+
+    order = orderModel.getOrder();
+
+    expect(order.total).toBe(200);
+  });
+
+  it("check immutable returns", () => {
+    orderModel.addOrderLine(lineTemplate);
+
+    const order = orderModel.getOrder();
+
+    const lines = orderModel.getOrderLines();
+
+    orderModel.addOrderLine({
+      ...lineTemplate,
+      product: { ...lineTemplate.product, id: 2 },
+    });
+
+    expect(lines.length).toBe(1);
+    expect(order.lines?.length).toBe(1);
   });
 });

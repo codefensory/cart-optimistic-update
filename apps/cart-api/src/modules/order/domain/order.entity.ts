@@ -1,9 +1,9 @@
 import { Result } from "oxide.ts";
 
 export interface OrderLineEntity {
-  id: number;
+  id: string;
   product: {
-    id: number;
+    id: string;
     name: string;
     price: number;
   };
@@ -12,16 +12,15 @@ export interface OrderLineEntity {
 }
 
 export interface OrderEntity {
-  id: number;
+  $loki?: string;
+
+  id: string;
   code?: string;
   lines?: OrderLineEntity[];
+  total?: number;
 }
 
-export interface OrderRepository {
-  getOrder(id: number): Promise<Result<OrderEntity, any>>;
-  saveOrder(order: OrderEntity): Promise<OrderEntity>;
-
-  getLines(id: number): Promise<OrderLineEntity[]>;
-  getLine(lineId: number): Promise<OrderLineEntity>;
-  saveOrderLine(orderLine: OrderLineEntity): Promise<OrderLineEntity>;
+export interface OrderRepositoryInterface {
+  getOrder(id: string): Promise<Result<OrderEntity, string>>;
+  save(order: OrderEntity): Promise<Result<OrderEntity, string>>;
 }
