@@ -20,13 +20,15 @@
     "immutable": "^4.1.0",
     "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
-    "nanoid": "^4.0.0",
-    "oxide.ts": "^1.0.0"
+    "node-fetch": "2.6.1",
+    "oxide.ts": "^1.0.0",
+    "shortid": "^2.2.16"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.182",
     "@types/lokijs": "^1.5.7",
     "@types/node": "^18.6.1",
+    "@types/shortid": "^0.0.29",
     "@vitest/ui": "^0.19.1",
     "esbuild": "^0.14.50",
     "nodemon": "^2.0.19",

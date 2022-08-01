@@ -1,12 +1,9 @@
 import { Result } from "oxide.ts";
+import { ProductEntity } from "../../products/product.entity";
 
 export interface OrderLineEntity {
   id: string;
-  product: {
-    id: string;
-    name: string;
-    price: number;
-  };
+  product: ProductEntity;
   quantity: number;
   total?: number;
 }
@@ -21,6 +18,6 @@ export interface OrderEntity {
 }
 
 export interface OrderRepositoryInterface {
-  getOrder(id: string): Promise<Result<OrderEntity, string>>;
-  save(order: OrderEntity): Promise<Result<OrderEntity, string>>;
+  getOrder(id: string): Promise<Result<OrderEntity, Error>>;
+  save(order: OrderEntity): Promise<Result<OrderEntity, Error>>;
 }

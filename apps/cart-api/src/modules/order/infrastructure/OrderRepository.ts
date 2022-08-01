@@ -3,18 +3,18 @@ import { OrderEntity, OrderRepositoryInterface } from "../domain";
 import { isNil } from "lodash";
 import { Err, Result, Ok } from "oxide.ts";
 
-export class OrderRepository implements OrderRepositoryInterface {
-  async getOrder(id: string): Promise<Result<OrderEntity, string>> {
+class OrderRepository implements OrderRepositoryInterface {
+  async getOrder(id: string): Promise<Result<OrderEntity, Error>> {
     const order: OrderEntity | null = dbModels.orders.findOne({ id });
 
     if (isNil(order)) {
-      return Err("Order not found");
+      return Err(Error("Order not found"));
     }
 
     return Ok(order);
   }
 
-  async save(order: OrderEntity): Promise<Result<OrderEntity, string>> {
+  async save(order: OrderEntity): Promise<Result<OrderEntity, Error>> {
     let result;
 
     if (order.$loki) {
@@ -24,9 +24,11 @@ export class OrderRepository implements OrderRepositoryInterface {
     }
 
     if (isNil(result)) {
-      return Err("Error to save");
+      return Err(Error("Error to save"));
     }
 
     return Ok(result as OrderEntity);
   }
 }
+
+export const orderRepository = new OrderRepository();

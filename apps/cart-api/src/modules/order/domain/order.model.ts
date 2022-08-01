@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { nanoid } from "nanoid";
+import shortid from "shortid";
 import { None, Option, Result, Some } from "oxide.ts";
 import { Immutable } from "../../../utils/immutable";
 import {
@@ -12,14 +12,14 @@ export class OrderModel {
   static async getByIdFromRepository(
     orderId: OrderEntity["id"],
     repository: OrderRepositoryInterface
-  ): Promise<Result<OrderModel, string>> {
+  ): Promise<Result<OrderModel, Error>> {
     const orderResult = await repository.getOrder(orderId);
     return orderResult.map((order) => new OrderModel(order, repository));
   }
 
   static generateOrder(): OrderEntity {
     const order: OrderEntity = {
-      id: nanoid(),
+      id: shortid.generate(),
       code: "000",
       lines: [],
       total: 0,
@@ -100,7 +100,7 @@ export class OrderModel {
     }
   }
 
-  async save(): Promise<Result<Immutable<OrderEntity>, string>> {
+  async save(): Promise<Result<Immutable<OrderEntity>, Error>> {
     const orderResult = await this.repository.save(
       this.getOrder() as OrderEntity
     );
@@ -120,7 +120,10 @@ export class OrderModel {
 
   private pushOrderLine(newLine: OrderLineEntity): void {
     const lines = List(this.props.lines);
-    this.props = { ...this.props, lines: lines.push(newLine).toArray() };
+
+    const line = this.prepareOrderLine(newLine);
+
+    this.props = { ...this.props, lines: lines.push(line).toArray() };
   }
 
   private updateOrderLineByIndex(index: number, newLine: OrderLineEntity) {
@@ -146,10 +149,7 @@ export class OrderModel {
   private calculeOrderTotal() {
     const lines = this.getOrderLines();
 
-    const total = lines.reduce(
-      (acc, curr) => acc + curr.product.price * curr.quantity,
-      0
-    );
+    const total = lines.reduce((acc, curr) => acc + (curr.total ?? 0), 0);
 
     this.props = { ...this.props, total };
   }

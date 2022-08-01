@@ -1,11 +1,9 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { dbModels } from "../../shared/database";
 import { OrderModel } from "../domain";
-import { OrderRepository } from "../infrastructure/OrderRepository";
+import { orderRepository } from "../infrastructure/OrderRepository";
 
 describe("order respository", () => {
-  let orderRepository = new OrderRepository();
-
   afterEach(() => {
     dbModels.orders.clear();
   });

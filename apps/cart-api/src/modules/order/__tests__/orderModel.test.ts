@@ -1,16 +1,15 @@
+import shortid from "shortid";
 import { expect, beforeEach, describe, it } from "vitest";
 import { OrderModel, OrderEntity, OrderLineEntity } from "../domain";
+import { orderRepository } from "../infrastructure/OrderRepository";
 
 describe("order model", () => {
-  const orderTemplate: OrderEntity = {
-    id: 0,
-    lines: [],
-  };
+  const orderTemplate: OrderEntity = OrderModel.generateOrder();
 
   const lineTemplate: OrderLineEntity = {
-    id: 0,
+    id: shortid.generate(),
     product: {
-      id: 0,
+      id: shortid.generate(),
       name: "libro",
       price: 10,
     },
@@ -20,7 +19,7 @@ describe("order model", () => {
   let orderModel: OrderModel;
 
   beforeEach(() => {
-    orderModel = new OrderModel({ ...orderTemplate });
+    orderModel = new OrderModel({ ...orderTemplate }, orderRepository);
   });
 
   it("add products in order", () => {
@@ -28,7 +27,7 @@ describe("order model", () => {
 
     orderModel.addOrderLine({
       ...lineTemplate,
-      product: { ...lineTemplate.product, id: 1 },
+      product: { ...lineTemplate.product, id: shortid.generate() },
       quantity: 20,
     });
 
@@ -36,7 +35,11 @@ describe("order model", () => {
 
     expect(order.lines?.[0].quantity).toBe(10);
 
+    expect(order.lines?.[0].total).toBe(100);
+
     expect(order.lines?.[1].quantity).toBe(20);
+
+    expect(order.lines?.[1].total).toBe(200);
 
     expect(order.lines?.length).toBe(2);
   });
@@ -46,7 +49,7 @@ describe("order model", () => {
 
     orderModel.addOrderLine({
       ...lineTemplate,
-      product: { ...lineTemplate.product, id: 1 },
+      product: { ...lineTemplate.product, id: shortid.generate() },
       quantity: 20,
     });
 
@@ -80,7 +83,7 @@ describe("order model", () => {
 
     orderModel.addOrderLine({
       ...lineTemplate,
-      product: { ...lineTemplate.product, id: 1 },
+      product: { ...lineTemplate.product, id: shortid.generate() },
     });
 
     orderModel.deleteOrderLine(lineTemplate.product.id, 4);
@@ -127,7 +130,7 @@ describe("order model", () => {
 
     orderModel.addOrderLine({
       ...lineTemplate,
-      product: { ...lineTemplate.product, id: 2 },
+      product: { ...lineTemplate.product, id: shortid.generate() },
     });
 
     expect(lines.length).toBe(1);
