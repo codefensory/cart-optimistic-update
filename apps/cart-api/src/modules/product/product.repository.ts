@@ -4,16 +4,26 @@ import { dbModels } from "../shared/database";
 import { ProductEntity, ProductRepositoryInterface } from "./product.entity";
 
 class ProductRepository implements ProductRepositoryInterface {
+  async getProducts(): Promise<Result<ProductEntity[], Error>> {
+    const products: ProductEntity[] | null = dbModels.products.find();
+
+    if (isNil(products)) {
+      return Err(Error("Products not found"));
+    }
+
+    return Ok(products);
+  }
+
   async getProduct(
     id: ProductEntity["id"]
   ): Promise<Result<ProductEntity, Error>> {
-    const order: ProductEntity | null = dbModels.products.findOne({ id });
+    const product: ProductEntity | null = dbModels.products.findOne({ id });
 
-    if (isNil(order)) {
+    if (isNil(product)) {
       return Err(Error("Product not found"));
     }
 
-    return Ok(order);
+    return Ok(product);
   }
 }
 

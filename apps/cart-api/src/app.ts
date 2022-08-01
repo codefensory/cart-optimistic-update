@@ -11,4 +11,9 @@ export default async function (fastify: FastifyInstance) {
     routesFolder: path.join(__dirname, "./modules/order/routes"),
     pathPrefix: "/order",
   });
+
+  fastify.register(fastifyNow, {
+    routesFolder: path.join(__dirname, "./modules/product/routes"),
+    pathPrefix: "/product",
+  });
 }

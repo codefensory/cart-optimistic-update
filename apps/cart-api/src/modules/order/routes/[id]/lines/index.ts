@@ -1,6 +1,6 @@
 import { NowRequestHandler } from "fastify-now";
-import { ProductEntity } from "../../../../products/product.entity";
-import { productRepository } from "../../../../products/product.repository";
+import { ProductEntity } from "../../../../product/product.entity";
+import { productRepository } from "../../../../product/product.repository";
 import { replyErrorMessage } from "../../../../shared/utils/returnError";
 import { OrderEntity, OrderLineEntity, OrderModel } from "../../../domain";
 import { orderRepository } from "../../../infrastructure/OrderRepository";

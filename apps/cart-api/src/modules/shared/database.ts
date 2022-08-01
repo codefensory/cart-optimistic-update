@@ -1,6 +1,6 @@
 import Loki from "lokijs";
 import { OrderModel } from "../order/domain";
-import { productsMock } from "../products/product.mock";
+import { productsMock } from "../product/product.mock";
 
 export const lokiDatabse = new Loki("database.db");
 
@@ -20,4 +20,5 @@ function createDefaultProducts() {
 }
 
 createDefaultProducts();
+
 createDefaultOrders();

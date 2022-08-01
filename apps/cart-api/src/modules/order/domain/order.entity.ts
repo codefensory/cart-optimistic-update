@@ -1,5 +1,5 @@
 import { Result } from "oxide.ts";
-import { ProductEntity } from "../../products/product.entity";
+import { ProductEntity } from "../../product/product.entity";
 
 export interface OrderLineEntity {
   id: string;

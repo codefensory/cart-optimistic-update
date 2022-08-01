@@ -8,6 +8,7 @@ export interface ProductEntity {
 }
 
 export interface ProductRepositoryInterface {
+  getProducts: () => Promise<Result<ProductEntity[], Error>>;
   getProduct: (
     id: ProductEntity["id"]
   ) => Promise<Result<ProductEntity, Error>>;
