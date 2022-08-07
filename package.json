@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "eslint-config-custom": "workspace:*",
-    "prettier": "latest",
+    "prettier": "2.7.1",
     "turbo": "latest"
   },
   "engines": {

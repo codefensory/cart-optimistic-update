@@ -1,6 +1,7 @@
 import Loki from "lokijs";
-import { OrderModel } from "../order/domain";
-import { productsMock } from "../product/product.mock";
+import shortid from "shortid";
+import { Order } from "../order/domain";
+import { productsMock } from "../product/data/productsMock";
 
 export const lokiDatabse = new Loki("database.db");
 
@@ -10,8 +11,7 @@ export const dbModels = {
 };
 
 function createDefaultOrders() {
-  const order = OrderModel.generateOrder();
-  order.id = "123";
+  const order = Order.create({ id: shortid.generate(), code: shortid.generate() });
   dbModels.orders.insert(order);
 }
 

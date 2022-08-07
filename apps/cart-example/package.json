@@ -14,11 +14,13 @@
     "@emotion/styled": "^11",
     "axios": "^0.27.2",
     "framer-motion": "^6",
+    "jotai": "^1.7.7",
     "oxide.ts": "^1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@tanstack/react-query": "^4.0.10",
     "@types/node": "^18.6.1",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
