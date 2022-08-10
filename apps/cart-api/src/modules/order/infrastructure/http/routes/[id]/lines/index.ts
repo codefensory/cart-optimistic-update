@@ -7,6 +7,9 @@ import {
   DeleteOrderLineApplication,
   DeleteOrderLineDTO,
 } from "../../../../../applications";
+import { OrderLineEntity } from "../../../../../domain";
+import { OrderLineMap } from "../../../../mappers/OrderLineMap";
+import { OrderMap } from "../../../../mappers/OrderMap";
 import { orderLokiRepository } from "../../../../repository/orderLokiRepository";
 
 type AddLineBodyRequest = Omit<AddOrderLineDTO, "orderId">;
@@ -20,10 +23,10 @@ export const GET: NowRequestHandler<{ Params: { id: string } }> = async (req, re
     return replyErrorMessage(reply, orderResult.unwrapErr());
   }
 
-  const order = orderResult.unwrap();
+  const order = OrderMap.toOnlyProductsID(orderResult.unwrap());
 
   return {
-    lines: order.lines?.toPersistence(),
+    lines: order.lines ?? [],
   };
 };
 
@@ -45,7 +48,7 @@ export const POST: NowRequestHandler<{
     return replyErrorMessage(reply, addOrderLineResult.unwrapErr());
   }
 
-  const lines = addOrderLineResult.unwrap();
+  const lines = OrderLineMap.toOnlyProductsID(addOrderLineResult.unwrap());
 
   return { lines };
 };
@@ -65,7 +68,7 @@ export const DELETE: NowRequestHandler<{
     return replyErrorMessage(reply, deleteOrderLineResult.unwrapErr());
   }
 
-  const lines = deleteOrderLineResult.unwrap();
+  const lines = OrderLineMap.toOnlyProductsID(deleteOrderLineResult.unwrap());
 
   return { lines };
 };

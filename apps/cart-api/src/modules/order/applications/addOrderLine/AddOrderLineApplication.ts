@@ -1,4 +1,4 @@
-import { Line, Order, OrderLineEntity, OrderLines, OrderRepository } from "../../domain";
+import { Line, Order, OrderLines, OrderRepository } from "../../domain";
 import { AddOrderLineDTO } from "./AddOrderLineDTO";
 import { Result, Ok, Err } from "oxide.ts";
 import { ProductRepository } from "../../../product/domain";
@@ -9,7 +9,7 @@ export class AddOrderLineApplication {
     private readonly productRepository: ProductRepository
   ) {}
 
-  async execute(dto: AddOrderLineDTO): Promise<Result<OrderLineEntity[], Error>> {
+  async execute(dto: AddOrderLineDTO): Promise<Result<OrderLines, Error>> {
     const orderResult = await this.orderRepository.getOrder(dto.orderId);
 
     if (orderResult.isErr()) {
@@ -42,6 +42,8 @@ export class AddOrderLineApplication {
 
     const linesRaw = orderSaveResult.unwrap().lines;
 
-    return Ok(linesRaw ?? []);
+    lines = OrderLines.fromPersistence(linesRaw ?? []);
+
+    return Ok(lines);
   }
 }

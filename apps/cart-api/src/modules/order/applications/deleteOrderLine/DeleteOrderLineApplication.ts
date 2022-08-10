@@ -1,11 +1,11 @@
 import { Result, Ok, Err } from "oxide.ts";
-import { Order, OrderLineEntity, OrderRepository } from "../../domain";
+import { Order, OrderLines, OrderRepository } from "../../domain";
 import { DeleteOrderLineDTO } from "./DeleteOrderLineDTO";
 
 export class DeleteOrderLineApplication {
   constructor(private readonly orderRepository: OrderRepository) {}
 
-  async execute(dto: DeleteOrderLineDTO): Promise<Result<OrderLineEntity[], Error>> {
+  async execute(dto: DeleteOrderLineDTO): Promise<Result<OrderLines, Error>> {
     const orderResult = await this.orderRepository.getOrder(dto.orderId);
 
     if (orderResult.isErr()) {
@@ -14,10 +14,10 @@ export class DeleteOrderLineApplication {
 
     let order = orderResult.unwrap();
 
-    const lines = order.lines;
+    let lines = order.lines;
 
     if (!lines) {
-      return Ok([]);
+      return Ok(OrderLines.create());
     }
 
     lines.deleteLine(dto.productId, dto.quantity);
@@ -32,6 +32,8 @@ export class DeleteOrderLineApplication {
 
     const linesRaw = saveResult.unwrap().lines;
 
-    return Ok(linesRaw ?? []);
+    lines = OrderLines.fromPersistence(linesRaw ?? []);
+
+    return Ok(lines);
   }
 }

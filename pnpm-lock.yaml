@@ -18,6 +18,7 @@ importers:
   apps/cart-api:
     specifiers:
       '@fastify/autoload': ^5.0.0
+      '@fastify/cors': ^8.1.0
       '@fastify/sensible': ^4.1.0
       '@types/lodash': ^4.14.182
       '@types/lokijs': ^1.5.7
@@ -41,6 +42,7 @@ importers:
       vitest: ^0.19.1
     dependencies:
       '@fastify/autoload': 5.1.0
+      '@fastify/cors': 8.1.0
       '@fastify/sensible': 4.1.0
       close-with-grace: 1.1.0
       dotenv: 16.0.1
@@ -1358,6 +1360,13 @@ packages:
     resolution: {integrity: sha512-FcZf3sy/8P6GObc6g2MrRqW1ricDtUm/xDK9i1PNH4Aaqj83DkkmADWTyQvE92OR0gy5EjPGPUcBHY7NzvHRUg==}
     dependencies:
       pkg-up: 3.1.0
+    dev: false
+
+  /@fastify/cors/8.1.0:
+    resolution: {integrity: sha512-1OmjwyxQZ8GePxa5t1Rpsn2qS56+1ouKMvZufpgJWhXtoCeM/ffA+PsNW8pyslPr4W0E27gVoFqtvHwhXW1U2w==}
+    dependencies:
+      fastify-plugin: 4.1.0
+      mnemonist: 0.39.2
     dev: false
 
   /@fastify/deepmerge/1.1.0:
@@ -3178,6 +3187,10 @@ packages:
     resolution: {integrity: sha512-qKcDXmuZadJqdTm6vlCqioEbyewF60b/0LOFCcYN1B6BIZGlYJumWWOYs70SFYLDAH4YqdE1cxH/RKMG7rFxgA==}
     dev: false
 
+  /fastify-plugin/4.1.0:
+    resolution: {integrity: sha512-Mf6lkbxHtFgI4sVaC0P/7sqlBvdpoyEUaOCD0cyKpqxjsdN+3EdD/FfSHByb7uXqxYu/DilH9Lb6mTCumN9TQQ==}
+    dev: false
+
   /fastify/4.3.0:
     resolution: {integrity: sha512-9q5Ron8jWmX6ElFkgZH4zmIIXdnkGIu16JozWG2ohcs7th5rAo1ymNi+rn6xCmbWc6jl9lf+9OxVe93LOg6/2w==}
     dependencies:
@@ -4057,6 +4070,12 @@ packages:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
     dev: false
 
+  /mnemonist/0.39.2:
+    resolution: {integrity: sha512-n3ZCEosuMH03DVivZ9N0fcXPWiZrBLEdfSlEJ+S/mJxmk3zuo1ur0dj9URDczFyP1VS3wfiyKzqLLDXoPJ6rPA==}
+    dependencies:
+      obliterator: 2.0.4
+    dev: false
+
   /mrmime/1.0.1:
     resolution: {integrity: sha512-hzzEagAgDyoU1Q6yg5uI+AorQgdvMCur3FcKf7NhMKWsaYg+RnbTyHRa/9IlLF9rf455MOCtcqqrQQ83pPP7Uw==}
     engines: {node: '>=10'}
@@ -4209,6 +4228,10 @@ packages:
       call-bind: 1.0.2
       define-properties: 1.1.4
       es-abstract: 1.20.1
+    dev: false
+
+  /obliterator/2.0.4:
+    resolution: {integrity: sha512-lgHwxlxV1qIg1Eap7LgIeoBWIMFibOjbrYPIPJZcI1mmGAI2m3lNYpK12Y+GBdPQ0U1hRwSord7GIaawz962qQ==}
     dev: false
 
   /on-exit-leak-free/2.1.0:

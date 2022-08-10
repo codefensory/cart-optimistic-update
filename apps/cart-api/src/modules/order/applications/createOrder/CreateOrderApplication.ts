@@ -1,12 +1,12 @@
-import { OrderRepository, OrderEntity, Order } from "../../domain";
-import { Result } from "oxide.ts";
+import { OrderRepository, Order } from "../../domain";
+import { Result, Err, Ok } from "oxide.ts";
 import shortid from "shortid";
 
 export class CreateOrderApplication {
   constructor(private readonly repository: OrderRepository) {}
 
-  async execute(): Promise<Result<OrderEntity, Error>> {
-    const order = Order.create({
+  async execute(): Promise<Result<Order, Error>> {
+    let order = Order.create({
       id: shortid.generate(),
       code: shortid.generate(),
       total: 0,
@@ -14,6 +14,12 @@ export class CreateOrderApplication {
 
     const saveResult = await this.repository.save(order);
 
-    return saveResult;
+    if (saveResult.isErr()) {
+      return Err(saveResult.unwrapErr());
+    }
+
+    order = Order.fromPersistence(saveResult.unwrap());
+
+    return Ok(order);
   }
 }

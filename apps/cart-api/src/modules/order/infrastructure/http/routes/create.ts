@@ -1,6 +1,7 @@
 import { NowRequestHandler } from "fastify-now";
 import { replyErrorMessage } from "../../../../shared/utils/returnError";
 import { CreateOrderApplication } from "../../../applications/createOrder";
+import { OrderMap } from "../../mappers/OrderMap";
 import { orderLokiRepository } from "../../repository/orderLokiRepository";
 
 export const POST: NowRequestHandler = async (_req, reply) => {
@@ -14,5 +15,7 @@ export const POST: NowRequestHandler = async (_req, reply) => {
 
   const order = createOrderResult.unwrap();
 
-  return { order };
+  const orderRaw = order.toPersistence();
+
+  return { order: orderRaw };
 };

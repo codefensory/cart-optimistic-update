@@ -3,7 +3,7 @@ import { Result, Err, Ok } from "oxide.ts";
 import { ProductEntity } from "../domain";
 
 const productApi = axios.create({
-  baseURL: `${process.env.REACT_APP_API}/product`,
+  baseURL: `${import.meta.env.VITE_API_URL}/product`,
 });
 
 export const getProducts = async (): Promise<
@@ -11,7 +11,7 @@ export const getProducts = async (): Promise<
 > => {
   const request = await productApi.get("/all");
 
-  if (request.status === 502) {
+  if (request.status === 500) {
     return Err(Error(request.data.error));
   }
 
