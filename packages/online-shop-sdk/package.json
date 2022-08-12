@@ -1,0 +1,28 @@
+{
+  "name": "online-shop-sdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/online-shop-sdk.cjs.js",
+  "module": "dist/online-shop-sdk.esm.js",
+  "types": "dist/online-shop-sdk.cjs.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "preconstruct build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-typescript": "^7.18.6",
+    "axios": "^0.27.2"
+  },
+  "preconstruct": {
+    "entrypoints": [
+      "index.ts"
+    ]
+  }
+}

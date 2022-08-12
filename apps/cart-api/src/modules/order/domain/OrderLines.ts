@@ -5,6 +5,7 @@ import { ProductEntity } from "../../product/domain";
 
 export type OrderLineEntity = {
   id: string;
+  orderId?: string;
   product: ProductEntity;
   quantity: number;
   total?: number;

@@ -17,7 +17,8 @@
     "jotai": "^1.7.7",
     "oxide.ts": "^1.0.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "online-shop-sdk": "workspace:*"
   },
   "devDependencies": {
     "@tanstack/react-query": "^4.0.10",

@@ -1,6 +1,8 @@
 import { ModelBase } from "../../shared/core/domain/ModelBase";
 import { OrderLineEntity } from ".";
 import { OrderLines } from ".";
+import { Line } from "./Line";
+import { List } from "immutable";
 
 export type OrderEntity = {
   id: string;
@@ -27,6 +29,12 @@ export class Order extends ModelBase<OrderProps, OrderEntity> {
   get(): OrderProps {
     const props = super.get();
     props.total = this.lines?.clone().reduce((acc, curr) => acc + (curr.get().total ?? 0), 0);
+    props.lines = OrderLines.create(
+      props.lines
+        ?.clone()
+        .map((line) => Line.create({ ...line.get(), orderId: props.id }))
+        .toArray()
+    );
     return props;
   }
 }

@@ -27,7 +27,7 @@ export const MainPage = () => {
             </Text>
             <Divider />
             <Box w="100%" h="calc(100% - 36px)" overflow="auto">
-              <ProductGrid />
+              <ProductGrid onProductSelect={() => {}} />
             </Box>
           </Box>
         </VStack>

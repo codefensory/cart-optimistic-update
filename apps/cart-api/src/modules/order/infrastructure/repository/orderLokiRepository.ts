@@ -4,8 +4,10 @@ import { isNil } from "lodash";
 import { Err, Result, Ok } from "oxide.ts";
 
 class OrderLokiRepository implements OrderRepository {
-  async getOrder(id: string): Promise<Result<Order, Error>> {
+  async getOrder(id?: string): Promise<Result<Order, Error>> {
     const order: OrderEntity | null = dbModels.orders.findOne({ id });
+
+    console.log(order);
 
     if (isNil(order)) {
       return Err(Error("Order not found"));

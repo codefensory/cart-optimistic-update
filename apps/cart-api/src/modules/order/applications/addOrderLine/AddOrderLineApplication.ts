@@ -2,6 +2,7 @@ import { Line, Order, OrderLines, OrderRepository } from "../../domain";
 import { AddOrderLineDTO } from "./AddOrderLineDTO";
 import { Result, Ok, Err } from "oxide.ts";
 import { ProductRepository } from "../../../product/domain";
+import { CreateOrderApplication } from "../createOrder";
 
 export class AddOrderLineApplication {
   constructor(
@@ -10,7 +11,15 @@ export class AddOrderLineApplication {
   ) {}
 
   async execute(dto: AddOrderLineDTO): Promise<Result<OrderLines, Error>> {
-    const orderResult = await this.orderRepository.getOrder(dto.orderId);
+    let orderResult: Result<Order, Error>;
+
+    if (!!dto.orderId) {
+      orderResult = await this.orderRepository.getOrder(dto.orderId);
+    } else {
+      const createOrderApplication = new CreateOrderApplication(this.orderRepository);
+
+      orderResult = await createOrderApplication.execute();
+    }
 
     if (orderResult.isErr()) {
       return Err(orderResult.unwrapErr());

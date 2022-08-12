@@ -15,7 +15,5 @@ export const POST: NowRequestHandler = async (_req, reply) => {
 
   const order = createOrderResult.unwrap();
 
-  const orderRaw = order.toPersistence();
-
-  return { order: orderRaw };
+  return order.toPersistence();
 };

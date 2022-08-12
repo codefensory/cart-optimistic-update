@@ -1,6 +1,6 @@
 import { NowRequestHandler } from "fastify-now";
-import { replyErrorMessage } from "../../../../../shared/utils/returnError";
-import { orderLokiRepository } from "../../../repository/orderLokiRepository";
+import { replyErrorMessage } from "../../../../shared/utils/returnError";
+import { orderLokiRepository } from "../../repository/orderLokiRepository";
 
 export const GET: NowRequestHandler<{ Params: { id: string } }> = async (req, reply) => {
   const orderResult = await orderLokiRepository.getOrder(req.params.id);
@@ -11,5 +11,5 @@ export const GET: NowRequestHandler<{ Params: { id: string } }> = async (req, re
 
   const orderModel = orderResult.unwrap();
 
-  return { order: orderModel.toPersistence() };
+  return orderModel.toPersistence();
 };

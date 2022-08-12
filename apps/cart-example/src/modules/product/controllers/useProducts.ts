@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CACHE_KEYS } from "../../shared/utils/contants";
-import { getProducts } from "../services/productService";
+import { onlineShop } from "../../shared/onlineShop";
 
 export const useProducts = () => {
   const {
@@ -8,15 +8,7 @@ export const useProducts = () => {
     isLoading,
     isError,
   } = useQuery(CACHE_KEYS.PRODUCTS, async () => {
-    const productsResult = await getProducts();
-
-    if (productsResult.isErr()) {
-      throw productsResult.unwrapErr();
-    }
-
-    const products = productsResult.unwrap();
-
-    return products;
+    return onlineShop.product.list();
   });
 
   return {

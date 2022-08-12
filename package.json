@@ -29,7 +29,7 @@
   "packageManager": "pnpm@7.6.0",
   "preconstruct": {
     "packages": [
-      "packages/ui"
+      "packages/online-shop-sdk"
     ]
   }
 }

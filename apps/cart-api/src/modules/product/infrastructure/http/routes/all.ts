@@ -11,5 +11,5 @@ export const GET: NowRequestHandler = async (_req, reply) => {
 
   const products = productsResult.unwrap();
 
-  return { products: products.map((product) => product.toPersistence()) };
+  return products.map((product) => product.toPersistence());
 };

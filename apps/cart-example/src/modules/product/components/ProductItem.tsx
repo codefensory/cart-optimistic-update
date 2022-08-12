@@ -1,9 +1,9 @@
 import { Box, Text, Image, Stack } from "@chakra-ui/react";
 import { FC } from "react";
-import { ProductEntity } from "../domain";
+import { Product } from "online-shop-sdk";
 
 type ProductItemProps = {
-  product: ProductEntity;
+  product: Product;
   onClick: () => void;
 };
 
