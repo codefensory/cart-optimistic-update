@@ -1,0 +1,28 @@
+{
+  "name": "spot-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/spot-system.cjs.js",
+  "module": "dist/spot-system.esm.js",
+  "types": "dist/spot-system.cjs.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "preconstruct build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-typescript": "^7.18.6",
+    "@types/shortid": "^0.0.29",
+    "vitest": "^0.19.1"
+  },
+  "dependencies": {
+    "oxide.ts": "^1.0.0",
+    "shortid": "^2.2.16"
+  }
+}

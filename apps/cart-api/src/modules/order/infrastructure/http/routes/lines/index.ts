@@ -1,15 +1,15 @@
 import { NowRequestHandler } from "fastify-now";
-import { productLokiRepository } from "../../../../product/infrastructure/repository/productLokiRepository";
-import { replyErrorMessage } from "../../../../shared/utils/returnError";
+import { productLokiRepository } from "../../../../../product/infrastructure/repository/productLokiRepository";
+import { replyErrorMessage } from "../../../../../shared/utils/returnError";
 import {
   AddOrderLineApplication,
   AddOrderLineDTO,
   DeleteOrderLineApplication,
   DeleteOrderLineDTO,
-} from "../../../applications";
-import { OrderLineMap } from "../../mappers/OrderLineMap";
-import { OrderMap } from "../../mappers/OrderMap";
-import { orderLokiRepository } from "../../repository/orderLokiRepository";
+} from "../../../../applications";
+import { OrderLineMap } from "../../../mappers/OrderLineMap";
+import { OrderMap } from "../../../mappers/OrderMap";
+import { orderLokiRepository } from "../../../repository/orderLokiRepository";
 
 export const GET: NowRequestHandler<{ Params: { id: string } }> = async (req, reply) => {
   const orderResult = await orderLokiRepository.getOrder(req.params.id);
@@ -44,6 +44,26 @@ export const POST: NowRequestHandler<{
   return lines;
 };
 
+POST.opts = {
+  schema: {
+    body: {
+      type: "object",
+      properties: {
+        orderId: {
+          type: "string",
+        },
+        productId: {
+          type: "string",
+        },
+        quantity: {
+          type: "number",
+        },
+      },
+      required: ["productId"],
+    },
+  },
+};
+
 export const DELETE: NowRequestHandler<{
   Body: DeleteOrderLineDTO;
 }> = async (req, reply) => {
@@ -60,4 +80,24 @@ export const DELETE: NowRequestHandler<{
   const lines = OrderLineMap.toOnlyProductsID(deleteOrderLineResult.unwrap());
 
   return lines;
+};
+
+DELETE.opts = {
+  schema: {
+    body: {
+      type: "object",
+      properties: {
+        orderId: {
+          type: "string",
+        },
+        productId: {
+          type: "string",
+        },
+        quantity: {
+          type: "number",
+        },
+      },
+      required: ["orderId", "productId"],
+    },
+  },
 };

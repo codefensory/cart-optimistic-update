@@ -1,7 +1,7 @@
 import { OnlineShop } from "../onlineShop";
 
 export class StorageFeature {
-  constructor(private shop: OnlineShop) {}
+  constructor(private shop: OnlineShop, private prefix: string | undefined) {}
 
   set(key: string, value: string) {
     if (!this.isAvalible()) {
@@ -20,7 +20,7 @@ export class StorageFeature {
   }
 
   private withPrefix(key: string): string {
-    return this.shop.prefix + key;
+    return (this.prefix ?? "") + key;
   }
 
   private isAvalible(): boolean {

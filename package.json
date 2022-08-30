@@ -24,12 +24,14 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@preconstruct/cli": "^2.2.1"
+    "@preconstruct/cli": "^2.2.1",
+    "ts-node": "^10.9.1"
   },
   "packageManager": "pnpm@7.6.0",
   "preconstruct": {
     "packages": [
-      "packages/online-shop-sdk"
+      "packages/online-shop-sdk",
+      "packages/spot-system"
     ]
   }
 }

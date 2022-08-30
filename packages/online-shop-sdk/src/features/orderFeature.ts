@@ -2,13 +2,15 @@ import { OnlineShop } from "../onlineShop";
 import { Order, OrderLine, Product } from "../types";
 
 const URL: string = "/order";
+
 const ORDER_ID_KEY = "orderId";
 
 export class OrderFeature {
   constructor(private shop: OnlineShop) {}
 
   id() {
-    return this.shop.storage.get(ORDER_ID_KEY);
+    const orderId = this.shop.storage.get(ORDER_ID_KEY);
+    return !!orderId ? orderId : undefined;
   }
 
   setId(id: string) {
@@ -16,7 +18,7 @@ export class OrderFeature {
   }
 
   async get(): Promise<Order | undefined> {
-    const orderId = this.shop.storage.get(ORDER_ID_KEY);
+    const orderId = this.id();
 
     if (!orderId) {
       return;
@@ -65,6 +67,17 @@ export class OrderFeature {
           orderId,
           productId,
         },
+      })
+    ).data as OrderLine[];
+  }
+
+  async updateLine(productId: string, quantity: number): Promise<OrderLine[]> {
+    const orderId = this.id();
+
+    return (
+      await this.shop.server.post(`${URL}/lines/${productId}`, {
+        orderId,
+        quantity,
       })
     ).data as OrderLine[];
   }
