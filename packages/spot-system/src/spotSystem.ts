@@ -1,5 +1,4 @@
-import { IntelligentQueue } from "./intelligentQueue";
-import { SpotItem, SpotState } from "./spot";
+import { IntelligentPromises } from "./intelligentPromises";
 
 export type CreateSpotProps = {
   id: string;
@@ -10,22 +9,11 @@ export type CreateSpotProps = {
 };
 
 type Groups = {
-  [key: string]: IntelligentQueue<SpotItem>;
+  [key: string]: IntelligentPromises<any>;
 };
 
 export class SpotSystem {
   private groups: Groups = {};
 
-  createSpot(groupId: string, action: Promise<any>, options: CreateSpotProps) {
-    const spot = SpotItem.create(action);
-
-    return {
-      id: spot.id,
-      promise: () => new Promise((resove, reject) => {
-        const group = this.groups[groupId] ?? new IntelligentQueue();
-        this.groups.enqueue(spot);
-        this.groups[groupId] = group;
-      }),
-    };
-  }
+  createSpot(groupId: string, action: Promise<any>, options: CreateSpotProps) {}
 }

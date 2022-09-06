@@ -1,7 +1,11 @@
 import shortid from "shortid";
 import debug from "debug";
 
-import { IntelligentQueue, IntelliItem } from "../intelligentQueue";
+import {
+  BaseIntelliItem,
+  IntelligentPromises,
+  IntelliItem,
+} from "../intelligentPromises";
 
 const log = debug("test:main");
 
@@ -31,9 +35,12 @@ function wait(time?: number, fail?: boolean) {
 
 let count = 0;
 
-function generateAdd(value: any, fail?: boolean, time?: number): IntelliItem {
-  return {
-    id: shortid.generate(),
+function generateAdd<V>(
+  value: V,
+  fail?: boolean,
+  time?: number
+): IntelliItem<V> {
+  return new BaseIntelliItem({
     name: "add",
     value,
     waitFor: ["update"],
@@ -41,16 +48,15 @@ function generateAdd(value: any, fail?: boolean, time?: number): IntelliItem {
     onError: (isLast, value) => {
       log("✖ Error add", count++, "{", isLast, ",", value, "}");
     },
-  };
+  });
 }
 
-function generateUpdate(
+function generateUpdate<T>(
   value: any,
   fail?: boolean,
   time?: number
-): IntelliItem {
-  return {
-    id: shortid.generate(),
+): IntelliItem<T> {
+  return new BaseIntelliItem({
     name: "update",
     value,
     depends: ["add", "update"],
@@ -58,11 +64,11 @@ function generateUpdate(
     onError: (isLast, value) => {
       log("✖ Error update", count++, "{", isLast, ",", value, "}");
     },
-  };
+  });
 }
 
 async function test() {
-  const intelli = new IntelligentQueue();
+  const intelli = new IntelligentPromises<number>();
 
   const start = performance.now();
 
