@@ -1,6 +1,9 @@
 import shortid from "shortid";
+import debug from "debug";
 
 import { IntelligentQueue, IntelliItem } from "../intelligentQueue";
+
+const log = debug("test:main");
 
 // TODO: Esperar si algun padre del padre esta pendiente
 
@@ -36,7 +39,7 @@ function generateAdd(value: any, fail?: boolean, time?: number): IntelliItem {
     waitFor: ["update"],
     action: () => wait(time, fail),
     onError: (isLast, value) => {
-      console.error("-X- Error add", count++, "{", isLast, ",", value, "}");
+      log("✖ Error add", count++, "{", isLast, ",", value, "}");
     },
   };
 }
@@ -53,7 +56,7 @@ function generateUpdate(
     depends: ["add", "update"],
     action: () => wait(time, fail),
     onError: (isLast, value) => {
-      console.error("-X- Error update", count++, "{", isLast, ",", value, "}");
+      log("✖ Error update", count++, "{", isLast, ",", value, "}");
     },
   };
 }
@@ -65,43 +68,36 @@ async function test() {
 
   intelli
     .add(generateAdd(1, false, 1000))
-    .then((value) =>
-      console.log("- [x] add", 1, "complete in:", performance.now() - start)
-    );
+    .then((value) => log("✔ add", 2, "complete in:", performance.now() - start))
+    .catch(() => void 0);
 
   intelli
     .add(generateAdd(2, true, 100))
-    .then((value) =>
-      console.log("- [x] add", 2, "complete in:", performance.now() - start)
-    )
+    .then((value) => log("✔ add", 2, "complete in:", performance.now() - start))
     .catch(() => void 0);
 
   intelli
     .add(generateUpdate(4, false, 1000))
     .then((value) => {
-      console.log("- [x] update", 3, "complete in:", performance.now() - start);
+      log("✔ update", 3, "complete in:", performance.now() - start);
     })
     .catch(() => void 0);
 
   intelli
     .add(generateUpdate(4, false, 1000))
     .then((value) =>
-      console.log("- [x] update", 4, "complete in:", performance.now() - start)
+      log("✔ update", 4, "complete in:", performance.now() - start)
     )
     .catch(() => void 0);
 
   intelli
     .add(generateAdd(11, false, 1000))
-    .then((value) =>
-      console.log("- [x] add", 5, "complete in:", performance.now() - start)
-    )
+    .then((value) => log("✔ add", 5, "complete in:", performance.now() - start))
     .catch(() => void 0);
 
   intelli
     .add(generateAdd(12, false, 1000))
-    .then((value) =>
-      console.log("- [x] add", 6, "complete in:", performance.now() - start)
-    )
+    .then((value) => log("✔ add", 6, "complete in:", performance.now() - start))
     .catch(() => void 0);
 }
 
