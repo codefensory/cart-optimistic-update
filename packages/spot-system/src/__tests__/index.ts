@@ -94,7 +94,7 @@ async function test() {
     .catch(() => void 0);
 
   intelli
-    .add(generateAdd(11, false, 1000))
+    .add(generateAdd(11, false, 2000))
     .then(() => log("✔ add", 5, "complete in:", performance.now() - start))
     .catch(() => void 0);
 

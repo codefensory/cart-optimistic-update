@@ -1,12 +1,12 @@
 import shortid from "shortid";
 
 export enum IntelliState {
-  None,
-  Block,
-  Pending,
-  Complete,
-  Error,
-  Canceled,
+  None = 1,
+  Block = 1 << 1,
+  Pending = 1 << 2,
+  Complete = 1 << 3,
+  Error = 1 << 4,
+  Canceled = 1 << 5,
 }
 
 export interface IntelliProps<V> {
@@ -25,6 +25,7 @@ export interface IntelliItem<V> {
   id: string;
   name: string;
   value: V | undefined;
+  state: IntelliState;
   canReplace: boolean;
   prevItem: IntelliItem<V> | undefined;
 
@@ -41,6 +42,7 @@ export interface IntelliItem<V> {
   isComplete(): boolean;
   isError(): boolean;
   isCanceled(): boolean;
+  isFinally(): boolean;
 
   promise(): Promise<any>;
   canReplaceItem(item: IntelliItem<V> | undefined): boolean;
@@ -48,6 +50,7 @@ export interface IntelliItem<V> {
   containDependsByName(itemName: string | undefined): boolean;
   isWaitingForPendingState(): boolean;
   isDependencyError(): boolean;
+  allIsFinally(): boolean;
 
   getCompletedValue(): V | undefined;
 }
@@ -103,6 +106,13 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
     return this.state === IntelliState.Pending;
   }
 
+  isFinally() {
+    return !!(
+      this.state &
+      (IntelliState.Complete | IntelliState.Canceled | IntelliState.Error)
+    );
+  }
+
   isBlock() {
     return this.state === IntelliState.Block;
   }
@@ -153,7 +163,14 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
   }
 
   getCompletedValue() {
-    return this.findCompletedValue(this.prevItem);
+    return this.findItemByState(this.prevItem, IntelliState.Complete)?.value;
+  }
+
+  allIsFinally() {
+    return !!!this.findItemByState(
+      this.prevItem,
+      IntelliState.Block | IntelliState.Pending | IntelliState.None
+    );
   }
 
   isWaitingForPendingState() {
@@ -172,16 +189,19 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
     return !!(this.prevItem?.isError() || this.prevItem?.isCanceled());
   }
 
-  private findCompletedValue(item: IntelliItem<V> | undefined): V | undefined {
+  private findItemByState(
+    item: IntelliItem<V> | undefined,
+    states: IntelliState
+  ): IntelliItem<V> | undefined {
     if (!item) {
       return;
     }
 
-    if (item.isComplete()) {
-      return item.value;
+    if (!!(item.state & states)) {
+      return item;
     }
 
-    return this.findCompletedValue(item.prevItem);
+    return this.findItemByState(item.prevItem, states);
   }
 
   private findPendingState(item: IntelliItem<V> | undefined): boolean {

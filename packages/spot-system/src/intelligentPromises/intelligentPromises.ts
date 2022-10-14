@@ -24,7 +24,7 @@ export class IntelligentPromises<V> {
   private isPending: boolean = false;
 
   constructor(
-    private pendingCallback: ((isPending: boolean) => void) | undefined
+    private pendingCallback?: ((isPending: boolean) => void) | undefined
   ) {}
 
   /**
@@ -119,16 +119,14 @@ export class IntelligentPromises<V> {
 
     // if there are no other elements, it exits
     if (queuePromiseWrap.isNone()) {
-      if (
-        !this.lastPromise?.item.isPending() &&
-        !this.lastPromise?.item.isBlock() &&
-        this.isPending
-      ) {
-        log("ENDED");
+      if (this.lastPromise?.item.isFinally() && this.isPending) {
+        if (this.lastPromise?.item.allIsFinally()) {
+          log("ENDED");
 
-        this.isPending = false;
+          this.isPending = false;
 
-        this.pendingCallback?.(this.isPending);
+          this.pendingCallback?.(this.isPending);
+        }
       }
 
       return;
