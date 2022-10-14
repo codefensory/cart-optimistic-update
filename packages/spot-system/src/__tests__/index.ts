@@ -102,6 +102,22 @@ async function test() {
     .add(generateAdd(12, false, 1000))
     .then(() => log("✔ add", 6, "complete in:", performance.now() - start))
     .catch(() => void 0);
+
+  await wait(5000);
+
+  intelli
+    .add(generateAdd(13, false, 1000))
+    .then(() => log("✔ add", 7, "complete in:", performance.now() - start))
+    .catch(() => void 0);
+
+  await wait(500);
+
+  intelli
+    .add(generateUpdate(10, false, 1000))
+    .then(() => {
+      log("✔ update", 8, "complete in:", performance.now() - start);
+    })
+    .catch(() => void 0);
 }
 
 test().catch(() => void 0);

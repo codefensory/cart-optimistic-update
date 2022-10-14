@@ -21,6 +21,12 @@ export class IntelligentPromises<V> {
 
   private lastPromise: PromiseItem<V> | undefined = undefined;
 
+  private isPending: boolean = false;
+
+  constructor(
+    private pendingCallback: ((isPending: boolean) => void) | undefined
+  ) {}
+
   /**
    * add a new promise to the queue
    *
@@ -51,6 +57,14 @@ export class IntelligentPromises<V> {
    */
   private enqueue(intelliItem: IntelliItem<V>) {
     return new Promise((resolve, reject) => {
+      if (!this.isPending) {
+        log("STARTED");
+
+        this.isPending = true;
+
+        this.pendingCallback?.(this.isPending);
+      }
+
       // new element to add
       const queuePromise: PromiseItem<V> = {
         item: intelliItem,
@@ -105,6 +119,18 @@ export class IntelligentPromises<V> {
 
     // if there are no other elements, it exits
     if (queuePromiseWrap.isNone()) {
+      if (
+        !this.lastPromise?.item.isPending() &&
+        !this.lastPromise?.item.isBlock() &&
+        this.isPending
+      ) {
+        log("ENDED");
+
+        this.isPending = false;
+
+        this.pendingCallback?.(this.isPending);
+      }
+
       return;
     }
 
