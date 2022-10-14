@@ -79,15 +79,18 @@ export class IntelligentPromises<V> {
         }
       }
 
-      // if we have the previous item inside waitFor, and it is different from isComplete, isError and isCanceled, then we block the new item
-      if (
-        intelliItem.containWaitForByName(this.lastPromise?.item.name) &&
-        (this.lastPromise?.item.isBlock() || this.lastPromise?.item.isPending())
-      ) {
-        intelliItem.block();
-      }
+      if (this.lastPromise && !this.lastPromise.item.isComplete()) {
+        // if we have the previous item inside waitFor, and it is different from isComplete, isError and isCanceled, then we block the new item
+        if (
+          intelliItem.containWaitForByName(this.lastPromise?.item.name) &&
+          (this.lastPromise?.item.isBlock() ||
+            this.lastPromise?.item.isPending())
+        ) {
+          intelliItem.block();
+        }
 
-      intelliItem.prevItem = this.lastPromise?.item;
+        intelliItem.prevItem = this.lastPromise?.item;
+      }
 
       this.lastPromise = queuePromise;
 
@@ -106,6 +109,7 @@ export class IntelligentPromises<V> {
     }
 
     let queuePromise = queuePromiseWrap.unwrap();
+
     let item = queuePromise.item;
 
     // if the previous element is blocked, the status is changed to blocked and exits

@@ -1,4 +1,3 @@
-import shortid from "shortid";
 import debug from "debug";
 
 import {
@@ -74,36 +73,34 @@ async function test() {
 
   intelli
     .add(generateAdd(1, false, 1000))
-    .then((value) => log("✔ add", 2, "complete in:", performance.now() - start))
+    .then(() => log("✔ add", 2, "complete in:", performance.now() - start))
     .catch(() => void 0);
 
   intelli
     .add(generateAdd(2, true, 100))
-    .then((value) => log("✔ add", 2, "complete in:", performance.now() - start))
+    .then(() => log("✔ add", 2, "complete in:", performance.now() - start))
     .catch(() => void 0);
 
   intelli
     .add(generateUpdate(4, false, 1000))
-    .then((value) => {
+    .then(() => {
       log("✔ update", 3, "complete in:", performance.now() - start);
     })
     .catch(() => void 0);
 
   intelli
     .add(generateUpdate(4, false, 1000))
-    .then((value) =>
-      log("✔ update", 4, "complete in:", performance.now() - start)
-    )
+    .then(() => log("✔ update", 4, "complete in:", performance.now() - start))
     .catch(() => void 0);
 
   intelli
     .add(generateAdd(11, false, 1000))
-    .then((value) => log("✔ add", 5, "complete in:", performance.now() - start))
+    .then(() => log("✔ add", 5, "complete in:", performance.now() - start))
     .catch(() => void 0);
 
   intelli
     .add(generateAdd(12, false, 1000))
-    .then((value) => log("✔ add", 6, "complete in:", performance.now() - start))
+    .then(() => log("✔ add", 6, "complete in:", performance.now() - start))
     .catch(() => void 0);
 }
 
