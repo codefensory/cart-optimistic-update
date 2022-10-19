@@ -20,7 +20,7 @@ export const MainPage = () => {
           </Box>
           <Box w="100%" h="50%">
             <Text fontSize="18" mb={2}>
-              Products{" "}
+              Products
               <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                 (Click to add to cart)
               </span>

@@ -37,6 +37,16 @@ export class OrderFeature {
     return order;
   }
 
+  public async getLines(): Promise<OrderLine[]> {
+    const orderId = this.id();
+
+    const response = await this.shop.server.get(`${URL}/lines/${orderId}`);
+
+    const lines = response.data as OrderLine[];
+
+    return lines;
+  }
+
   async addLine(
     productId: Product["id"],
     quantity?: OrderLine["quantity"]

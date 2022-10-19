@@ -1,19 +1,60 @@
-import { IntelligentPromises } from "./intelligentPromises";
+import { IntelligentPromises, IntelliItem } from "./intelligentPromises";
 
-export type CreateSpotProps = {
-  id: string;
-  depends?: Array<string>;
-  canReplace?: boolean;
-  value?: any;
-  onError?: () => void;
+type Groups<V> = {
+  [key: string]: IntelligentPromises<V> | undefined;
 };
 
-type Groups = {
-  [key: string]: IntelligentPromises<any>;
-};
+export class SpotSystem<V> {
+  public isPending: boolean = false;
 
-export class SpotSystem {
-  private groups: Groups = {};
+  private groups: Groups<V> = {};
 
-  createSpot(groupId: string, action: Promise<any>, options: CreateSpotProps) {}
+  private listeners: Set<(isPending: boolean) => void> = new Set();
+
+  private groupsPending: { [key: string]: boolean } = {};
+
+  private countPendingPromises: number = 0;
+
+  public addSpot(groupId: string, spot: IntelliItem<V>) {
+    let intelligentPromise = this.groups[groupId];
+
+    if (!intelligentPromise) {
+      intelligentPromise = this.groups[groupId] = new IntelligentPromises<V>(
+        (isPending) => this.onPending(groupId, isPending)
+      );
+    }
+
+    return intelligentPromise.add(spot);
+  }
+
+  private onPending(groupId: string, isPending: boolean) {
+    const group = this.groupsPending[groupId];
+
+    if (isPending) {
+      if (!group) {
+        this.groupsPending[groupId] = true;
+
+        this.countPendingPromises += 1;
+      }
+    } else {
+      if (group) {
+        delete this.groupsPending[groupId];
+
+        this.countPendingPromises -= 1;
+      }
+    }
+
+    this.isPending = this.countPendingPromises === 0;
+
+    this.notifyPendingEvent();
+  }
+
+  public subscribe(listener: (isPending: boolean) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  public notifyPendingEvent() {
+    this.listeners.forEach((l) => l(this.isPending));
+  }
 }

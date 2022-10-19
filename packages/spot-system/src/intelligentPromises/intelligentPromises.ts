@@ -19,13 +19,11 @@ export interface PromiseItem<V> {
 export class IntelligentPromises<V> {
   public promises: PromiseItem<V>[] = [];
 
+  public isPending: boolean = false;
+
   private lastPromise: PromiseItem<V> | undefined = undefined;
 
-  private isPending: boolean = false;
-
-  constructor(
-    private pendingCallback?: ((isPending: boolean) => void) | undefined
-  ) {}
+  constructor(private listener?: (isPending: boolean) => void) {}
 
   /**
    * add a new promise to the queue
@@ -45,7 +43,7 @@ export class IntelligentPromises<V> {
 
           item.onError?.(isLast, value);
 
-          reject(reason.err);
+          reject({ error: reason.err, item: isLast, value });
         });
     });
   }
@@ -62,7 +60,7 @@ export class IntelligentPromises<V> {
 
         this.isPending = true;
 
-        this.pendingCallback?.(this.isPending);
+        this.notifyQueueStatus();
       }
 
       // new element to add
@@ -125,7 +123,7 @@ export class IntelligentPromises<V> {
 
           this.isPending = false;
 
-          this.pendingCallback?.(this.isPending);
+          this.notifyQueueStatus();
         }
       }
 
@@ -193,6 +191,10 @@ export class IntelligentPromises<V> {
     if (this.peek().isSome()) {
       this.processQueue();
     }
+  }
+
+  private notifyQueueStatus() {
+    this.listener?.(this.isPending);
   }
 
   // peek next item

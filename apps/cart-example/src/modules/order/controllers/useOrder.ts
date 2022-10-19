@@ -1,11 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { onlineShop } from "../../shared/onlineShop";
-import { CACHE_KEYS } from "../../shared/utils/contants";
+import { cacheKeys } from "../../shared/utils/contants";
 
 export const useOrder = () => {
   const { isLoading, data, isError } = useQuery(
-    CACHE_KEYS.ORDERS,
-    onlineShop.order.get,
+    cacheKeys.order(),
+    async () => {
+      let order = await onlineShop.order.get();
+
+      if (!order) {
+        order = await onlineShop.order.create();
+      }
+
+      return order;
+    },
     {
       refetchOnMount: false,
       refetchOnReconnect: false,
