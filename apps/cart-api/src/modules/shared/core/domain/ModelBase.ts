@@ -13,7 +13,7 @@ export abstract class ModelBase<T, P = T> implements ToPersistence<P> {
 
     const props = this.get();
 
-    const keys = Object.keys(props);
+    const keys = Object.keys(props as any);
 
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
