@@ -2,6 +2,7 @@ import { Option } from "oxide.ts";
 import debug from "debug";
 
 import { IntelliItem } from ".";
+import { findPendingState, verifyIfNextItemsIsLast } from "./utils";
 
 const log = debug("spot-system:IntelligentPromises");
 
@@ -10,18 +11,22 @@ type RejectReason<V> = {
   err: Error;
 };
 
-export interface PromiseItem<V> {
-  item: IntelliItem<V>;
-  resolve(value: any): void;
+export interface PromiseItem<V, R = any> {
+  item: IntelliItem<V, R>;
+  resolve(value: R): void;
   reject(reason: RejectReason<V>): void;
 }
 
 export class IntelligentPromises<V> {
   public promises: PromiseItem<V>[] = [];
 
-  public isPending: boolean = false;
+  public isPending = false;
 
   private lastPromise: PromiseItem<V> | undefined = undefined;
+
+  private lastValueCompleted: V | undefined;
+
+  private promisesPending = 0;
 
   constructor(private listener?: (isPending: boolean) => void) {}
 
@@ -30,20 +35,66 @@ export class IntelligentPromises<V> {
    *
    * @param intelliItem item to add
    * */
-  public add(intelliItem: IntelliItem<V>) {
-    return new Promise((resolve, reject) => {
+  public add<R>(
+    intelliItem: IntelliItem<V, R>
+  ): Promise<V | R | null | undefined> {
+    this.promisesPending++;
+
+    if (!this.isPending) {
+      this.isPending = true;
+
+      this.notifyQueueStatus();
+    }
+
+    return new Promise((resolve) => {
       this.enqueue(intelliItem)
-        .then(resolve)
+        .then((value) => {
+          if (value === null) {
+            return resolve(null);
+          }
+
+          const item = value.item;
+
+          let isLast = false;
+
+          if (item.nextItem?.isPartialComplete() || item.nextItem?.isError()) {
+            isLast = verifyIfNextItemsIsLast(
+              item.nextItem,
+              this.lastPromise?.item.id
+            );
+          } else {
+            isLast =
+              this.lastPromise?.item.id === item.id &&
+              !item.isPartialComplete();
+          }
+
+          item.onComplete?.(isLast, value.result, this.lastValueCompleted);
+
+          resolve(value.result);
+        })
         .catch((reason: RejectReason<V>) => {
           const item = reason?.item;
 
           const isLast = this.lastPromise?.item.id === item?.id;
 
-          const value = item.getCompletedValue();
+          const value = this.lastValueCompleted;
 
           item.onError?.(isLast, value);
 
-          reject({ error: reason.err, item: isLast, value });
+          resolve(value);
+        })
+        .finally(() => {
+          this.promisesPending--;
+
+          if (this.promisesPending < 0) {
+            throw new Error("Count pending promises is negative!");
+          }
+
+          if (this.promisesPending === 0) {
+            this.isPending = false;
+
+            this.notifyQueueStatus();
+          }
         });
     });
   }
@@ -53,24 +104,16 @@ export class IntelligentPromises<V> {
    *
    * @param intelliItem item to add
    */
-  private enqueue(intelliItem: IntelliItem<V>) {
+  private enqueue<R>(
+    intelliItem: IntelliItem<V, R>
+  ): Promise<{ item: IntelliItem<V, R>; result: R }> {
     return new Promise((resolve, reject) => {
-      if (!this.isPending) {
-        log("STARTED");
-
-        this.isPending = true;
-
-        this.notifyQueueStatus();
-      }
-
       // new element to add
       const queuePromise: PromiseItem<V> = {
         item: intelliItem,
         resolve,
         reject,
       };
-
-      log(`➤ enqueue ${intelliItem.name} ${intelliItem.id}`);
 
       const lastPromiseEnqueued = this.promises[this.promises.length - 1];
 
@@ -84,9 +127,12 @@ export class IntelligentPromises<V> {
 
           this.promises[this.promises.length - 1] = queuePromise;
 
+          log(`➤ skip ${intelliItem.name} ${intelliItem.id}`);
+
           // when replaced, the replaced item will respond as if it was completed correctly
           // but returning null
           lastPromiseEnqueued.resolve(null);
+
           return;
         }
       }
@@ -94,15 +140,21 @@ export class IntelligentPromises<V> {
       if (this.lastPromise && !this.lastPromise.item.isComplete()) {
         // if we have the previous item inside waitFor, and it is different from isComplete, isError and isCanceled, then we block the new item
         if (
-          intelliItem.containWaitForByName(this.lastPromise?.item.name) &&
-          (this.lastPromise?.item.isBlock() ||
-            this.lastPromise?.item.isPending())
+          (intelliItem.containWaitForByName(this.lastPromise.item.name) ||
+            intelliItem.containDependsByName(this.lastPromise.item.name)) &&
+          (this.lastPromise.item.isBlock() ||
+            this.lastPromise.item.isPending() ||
+            this.lastPromise.item.isPartialComplete())
         ) {
           intelliItem.block();
+        } else {
+          this.lastPromise.item.nextItem = intelliItem;
         }
 
-        intelliItem.prevItem = this.lastPromise?.item;
+        intelliItem.prevItem = this.lastPromise.item;
       }
+
+      log(`➤ enqueue ${intelliItem.name} ${intelliItem.id}`);
 
       this.lastPromise = queuePromise;
 
@@ -113,20 +165,10 @@ export class IntelligentPromises<V> {
   }
 
   public async processQueue() {
-    let queuePromiseWrap = this.peek();
+    const queuePromiseWrap = this.peek();
 
     // if there are no other elements, it exits
     if (queuePromiseWrap.isNone()) {
-      if (this.lastPromise?.item.isFinally() && this.isPending) {
-        if (this.lastPromise?.item.allIsFinally()) {
-          log("ENDED");
-
-          this.isPending = false;
-
-          this.notifyQueueStatus();
-        }
-      }
-
       return;
     }
 
@@ -143,6 +185,12 @@ export class IntelligentPromises<V> {
 
     // if it is on the waiting list and is pending, the status is changed to blocked and it exits.
     if (item.isWaitingForPendingState()) {
+      item.block();
+
+      return;
+    }
+
+    if (item.prevItem?.isPartialComplete()) {
       item.block();
 
       return;
@@ -173,9 +221,27 @@ export class IntelligentPromises<V> {
       .then((result) => {
         log("\x1b[32m%s\x1b[0m", "✔ Complete", item.name, item.id);
 
+        item.value = result;
+
+        this.lastValueCompleted = result;
+
+        if (
+          item.prevItem?.isPartialComplete() ||
+          findPendingState(item.prevItem)
+        ) {
+          item.partialComplete();
+
+          queuePromise.resolve({ item, result });
+
+          return;
+        }
+
+        queuePromise.resolve({ item, result });
+
         item.complete();
 
-        queuePromise.resolve(result);
+        // at the end of executing the promise, re-execute the process
+        this.processQueue();
       })
       .catch((err) => {
         log("\x1b[31m%s\x1b[0m", "✖ Error", item.name, item.id);
@@ -183,9 +249,10 @@ export class IntelligentPromises<V> {
         item.error();
 
         queuePromise.reject({ item, err });
-      })
-      // at the end of executing the promise, re-execute the process
-      .finally(() => this.processQueue());
+
+        // at the end of executing the promise, re-execute the process
+        this.processQueue();
+      });
 
     // if there are no items in the queue, re-execute the process.
     if (this.peek().isSome()) {

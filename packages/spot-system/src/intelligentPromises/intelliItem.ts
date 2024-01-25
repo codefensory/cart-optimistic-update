@@ -1,50 +1,50 @@
 import shortid from "shortid";
+import { IntelliState } from "./contants";
+import { findItemByState, findPendingState } from "./utils";
 
-export enum IntelliState {
-  None = 1,
-  Block = 1 << 1,
-  Pending = 1 << 2,
-  Complete = 1 << 3,
-  Error = 1 << 4,
-  Canceled = 1 << 5,
-}
-
-export interface IntelliProps<V> {
+export interface IntelliProps<V, R> {
   name: string;
-  action: () => Promise<any>;
+  action: () => Promise<R>;
   depends?: string[];
   waitFor?: string[];
   canReplace?: boolean;
 
   value?: V;
 
-  onError(isLast: boolean, value: any): void;
+  onComplete?(isLast: boolean, value: R, lastValueCompleted?: V | R): void;
+  onError?(isLast: boolean, value: V | undefined): void;
 }
 
-export interface IntelliItem<V> {
+export interface IntelliItem<V, R = any> {
   id: string;
   name: string;
-  value: V | undefined;
+  value: V | R | undefined;
   state: IntelliState;
   canReplace: boolean;
   prevItem: IntelliItem<V> | undefined;
+  nextItem: IntelliItem<V> | undefined;
 
-  onError: ((isLast: boolean, value: V | undefined) => void) | undefined;
+  onComplete?:
+    | ((isLast: boolean, value: R, lastValueCompleted?: V | R) => void)
+    | undefined;
+  onError?: ((isLast: boolean, value: V | undefined) => void) | undefined;
 
   block(): void;
-  error(): void;
+  error(validPartial?: boolean): void;
   pending(): void;
-  complete(): void;
+  complete(validPartial?: boolean): void;
+  partialComplete(): void;
   cancel(): void;
 
   isPending(): boolean;
   isBlock(): boolean;
   isComplete(): boolean;
+  isPartialComplete(): boolean;
   isError(): boolean;
   isCanceled(): boolean;
   isFinally(): boolean;
 
-  promise(): Promise<any>;
+  promise(): Promise<R>;
   canReplaceItem(item: IntelliItem<V> | undefined): boolean;
   containWaitForByName(itemName: string | undefined): boolean;
   containDependsByName(itemName: string | undefined): boolean;
@@ -55,22 +55,26 @@ export interface IntelliItem<V> {
   getCompletedValue(): V | undefined;
 }
 
-export class BaseIntelliItem<V> implements IntelliItem<V> {
+export class BaseIntelliItem<V, R> implements IntelliItem<V, R> {
   public id: string;
   public name: string;
-  public action: () => Promise<any>;
+  public action: () => Promise<R>;
   public state: IntelliState;
   public depends: string[];
   public waitFor: string[];
   public canReplace: boolean;
 
-  public value: V | undefined;
+  public value: V | R | undefined;
 
   public prevItem: IntelliItem<V> | undefined;
+  public nextItem: IntelliItem<V> | undefined;
 
+  public onComplete:
+    | ((isLast: boolean, value: R, lastValueCompleted?: V | R) => void)
+    | undefined;
   public onError: ((isLast: boolean, value: V | undefined) => void) | undefined;
 
-  constructor(options: IntelliProps<V>) {
+  constructor(options: IntelliProps<V, R>) {
     this.id = shortid.generate();
     this.name = options.name;
     this.action = options.action;
@@ -78,7 +82,7 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
     this.depends = options.depends ?? [];
     this.waitFor = options.waitFor ?? this.depends;
     this.canReplace = !!options.canReplace;
-    this.value = options.value;
+    this.onComplete = options.onComplete;
     this.onError = options.onError;
   }
 
@@ -86,16 +90,28 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
     this.state = IntelliState.Block;
   }
 
-  error() {
+  error(validPartial?: boolean) {
     this.state = IntelliState.Error;
+
+    if (validPartial) {
+      this.nextPartialToComplete(this.nextItem);
+    }
   }
 
   pending() {
     this.state = IntelliState.Pending;
   }
 
-  complete() {
+  complete(validPartial?: boolean) {
     this.state = IntelliState.Complete;
+
+    if (validPartial) {
+      this.nextPartialToComplete(this.nextItem);
+    }
+  }
+
+  partialComplete() {
+    this.state = IntelliState.PartialComplete;
   }
 
   cancel() {
@@ -119,6 +135,10 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
 
   isComplete() {
     return this.state === IntelliState.Complete;
+  }
+
+  isPartialComplete() {
+    return this.state === IntelliState.PartialComplete;
   }
 
   isError() {
@@ -159,26 +179,30 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
 
   promise() {
     this.state = IntelliState.Pending;
+
     return this.action();
   }
 
   getCompletedValue() {
-    return this.findItemByState(this.prevItem, IntelliState.Complete)?.value;
+    return findItemByState(this.prevItem, IntelliState.Complete)?.value;
   }
 
   allIsFinally() {
-    return !!!this.findItemByState(
+    return !findItemByState(
       this.prevItem,
       IntelliState.Block | IntelliState.Pending | IntelliState.None
     );
   }
 
   isWaitingForPendingState() {
-    if (!this.containWaitForByName(this.prevItem?.name)) {
+    if (
+      !this.containWaitForByName(this.prevItem?.name) &&
+      !this.containDependsByName(this.prevItem?.name)
+    ) {
       return false;
     }
 
-    return this.findPendingState(this.prevItem);
+    return findPendingState(this.prevItem);
   }
 
   isDependencyError() {
@@ -189,34 +213,21 @@ export class BaseIntelliItem<V> implements IntelliItem<V> {
     return !!(this.prevItem?.isError() || this.prevItem?.isCanceled());
   }
 
-  private findItemByState(
-    item: IntelliItem<V> | undefined,
-    states: IntelliState
-  ): IntelliItem<V> | undefined {
+  private nextPartialToComplete(item: IntelliItem<V> | undefined) {
     if (!item) {
       return;
     }
 
-    if (!!(item.state & states)) {
-      return item;
+    if (item.isPartialComplete()) {
+      item.complete(true);
+
+      return;
     }
 
-    return this.findItemByState(item.prevItem, states);
-  }
+    if (item.isError()) {
+      this.nextPartialToComplete(item.nextItem);
 
-  private findPendingState(item: IntelliItem<V> | undefined): boolean {
-    if (!item) {
-      return false;
+      return;
     }
-
-    if (item.isPending()) {
-      return true;
-    }
-
-    if (item.isError() || item.isCanceled()) {
-      return this.findPendingState(item.prevItem);
-    }
-
-    return false;
   }
 }

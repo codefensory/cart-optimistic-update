@@ -16,104 +16,143 @@ function provability(percent: number) {
   return Math.random() <= percent;
 }
 
-function wait(time?: number, fail?: boolean) {
+let serverValue = 0;
+
+function updateServer(type: string, value: number) {
+  serverValue = type === "add" ? serverValue + 1 : value;
+
+  return serverValue;
+}
+
+function wait(type: string, value: any, time?: number, fail?: boolean) {
   return new Promise((resolve, reject) =>
     setTimeout(
       () =>
         fail
           ? reject()
           : fail === false
-          ? resolve(null)
+          ? resolve(updateServer(type, value))
           : provability(100)
-          ? resolve(null)
+          ? resolve(updateServer(type, value))
           : reject(),
       time ?? Math.random() * 2000
     )
   );
 }
 
-let count = 0;
-
 function generateAdd<V>(
-  value: V,
+  nextValue: V,
   fail?: boolean,
-  time?: number
+  time?: number,
+  onComplete?: (isLast: boolean, value: V, lastValueCompleted: V) => void,
+  onError?: (isLast: boolean, value: V) => void
 ): IntelliItem<V> {
   return new BaseIntelliItem({
     name: "add",
-    value,
     waitFor: ["update"],
-    action: () => wait(time, fail),
-    onError: (isLast, value) => {
-      log("✖ Error add", count++, "{", isLast, ",", value, "}");
-    },
+    action: () => wait("add", nextValue, time, fail),
+    onComplete,
+    onError,
   });
 }
 
-function generateUpdate<T>(
-  value: any,
+function generateUpdate<V>(
+  nextValue: V,
   fail?: boolean,
-  time?: number
-): IntelliItem<T> {
+  time?: number,
+  onComplete?: (isLast: boolean, value: V, lastValueCompleted: V) => void,
+  onError?: (isLast: boolean, value: V) => void
+): IntelliItem<V> {
   return new BaseIntelliItem({
     name: "update",
-    value,
-    depends: ["add", "update"],
-    action: () => wait(time, fail),
-    onError: (isLast, value) => {
-      log("✖ Error update", count++, "{", isLast, ",", value, "}");
-    },
+    waitFor: ["update", "add"],
+    action: () => wait("update", nextValue, time, fail),
+    onComplete,
+    onError,
   });
 }
 
 async function test() {
-  const intelli = new IntelligentPromises<number>();
+  let localValue = 0;
+
+  const intelli = new IntelligentPromises<number>((pending) => {
+    if (!pending) {
+      log("finish values");
+
+      log("server value:", serverValue);
+      log("local value:", localValue);
+    }
+  });
 
   const start = performance.now();
 
-  intelli
-    .add(generateAdd(1, false, 1000))
-    .then(() => log("✔ add", 2, "complete in:", performance.now() - start))
-    .catch(() => void 0);
+  function addTestSpot(options: {
+    type: "add" | "update";
+    value: number;
+    fail?: boolean;
+    time?: number;
+  }) {
+    const isAdd = options.type === "add";
 
-  intelli
-    .add(generateAdd(2, true, 100))
-    .then(() => log("✔ add", 2, "complete in:", performance.now() - start))
-    .catch(() => void 0);
+    const generator = isAdd ? generateAdd : generateUpdate;
 
-  intelli
-    .add(generateUpdate(4, false, 1000))
-    .then(() => {
-      log("✔ update", 3, "complete in:", performance.now() - start);
-    })
-    .catch(() => void 0);
+    const nextValue = isAdd ? localValue + options.value : options.value;
 
-  intelli
-    .add(generateUpdate(4, false, 1000))
-    .then(() => log("✔ update", 4, "complete in:", performance.now() - start))
-    .catch(() => void 0);
+    localValue = nextValue;
 
-  intelli
-    .add(generateAdd(11, false, 2000))
-    .then(() => log("✔ add", 5, "complete in:", performance.now() - start))
-    .catch(() => void 0);
+    return intelli
+      .add(
+        generator(
+          nextValue,
+          options.fail,
+          options.time,
+          (isLast, value, lastValueCompleted) => {
+            if (isLast) {
+              localValue = value;
+            }
 
-  intelli
-    .add(generateAdd(12, false, 1000))
-    .then(() => log("✔ add", 6, "complete in:", performance.now() - start))
-    .catch(() => void 0);
+            log(
+              "✔",
+              options.type,
+              "value",
+              value,
+              "complete in:",
+              performance.now() - start,
+              "isLast:",
+              isLast,
+              "lastValueCompleted:",
+              lastValueCompleted
+            );
+          },
+          (isLast, value) => {
+            if (isAdd) {
+              if (isLast && value) {
+                localValue = value;
 
-  await wait(5000);
+                return;
+              }
 
-  intelli
-    .add(generateAdd(13, false, 2000))
-    .then(() => log("✔ add", 7, "complete in:", performance.now() - start))
-    .catch(() => void 0);
+              localValue -= options.value;
+            }
+          }
+        )
+      )
+      .catch(() => void 0);
+  }
 
-  intelli
-    .add(generateAdd(13, false, 1000))
-    .then(() => log("✔ add", 7, "complete in:", performance.now() - start))
-    .catch(() => void 0);
+  addTestSpot({ type: "add", value: 1, time: 1500 });
+
+  addTestSpot({ type: "add", value: 2, time: 100 });
+
+  addTestSpot({ type: "add", value: 1, time: 200, fail: true });
+
+  addTestSpot({ type: "update", value: 5, time: 1000 });
+
+  addTestSpot({ type: "add", value: 1, time: 500 });
+
+  addTestSpot({ type: "add", value: 1, time: 300 });
+
+  log("local value:", localValue);
 }
 
 test().catch(() => void 0);
